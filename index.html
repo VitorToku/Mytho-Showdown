@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mytho Showdown | Card-Game Mitológico</title>
+    <meta name="description"
+        content="Um duelo estratégico de cartas baseado na Mitologia Grega. Escolha seus deuses e domine os elementos.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Marcellus&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- MODIFICADORES GLOBAIS -->
+        <header id="modifiers-bar">
+            <div id="modifier-title"
+                style="font-size: 0.7rem; color: var(--gold); letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase;">
+                Modificadores Ativos</div>
+            <div id="modifier-content">
+                <!-- Modificadores injetados via JS -->
+            </div>
+        </header>
+
+        <div class="header-info">
+            <h1>MYTHO SHOWDOWN</h1>
+            <div id="turn-display">Turno: <span id="current-turn">1</span>/3</div>
+        </div>
+
+        <div id="turn-history">
+            <h3>Histórico de Turnos</h3>
+            <div id="turn-history-list"></div>
+        </div>
+
+        <!-- CAMPO DE BATALHA -->
+        <main id="battlefield">
+            <!-- Área do Oponente (Topo) -->
+            <div id="opponent-side" class="side">
+                <div id="opponent-score" class="score-badge">OPONENTE: <span id="score-opp">0</span></div>
+                <div id="opponent-hand" class="hand-hidden">
+                    <!-- Cartas viradas do oponente aparecerão aqui visualmente -->
+                    <div class="card-back-small"></div>
+                    <div class="card-back-small"></div>
+                    <div class="card-back-small"></div>
+                    <div class="card-back-small"></div>
+                    <div class="card-back-small"></div>
+                </div>
+                <div id="opponent-played-zone" class="played-zone">
+                    <div id="opponent-card-slot" class="card-slot"></div>
+                </div>
+            </div>
+
+            <!-- Centro: Versus & Mensagens -->
+            <div id="vs-container">
+                <div id="game-message">Escolha sua carta!</div>
+                <div class="vs-divider"></div>
+            </div>
+
+            <!-- Área do Jogador (Baixo) -->
+            <div id="player-side" class="side">
+                <div id="player-played-zone" class="played-zone">
+                    <div id="player-card-slot" class="card-slot"></div>
+                </div>
+                <div id="player-score" class="score-badge">JOGADOR: <span id="score-player">0</span></div>
+                <div id="player-hand" class="hand">
+                    <!-- Cartas do jogador serão injetadas via JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- OVERLAY DE RESULTADO -->
+        <div id="result-overlay" class="hidden">
+            <div class="result-content">
+                <h2 id="result-title">VITÓRIA!</h2>
+                <p id="result-message">Você dominou o Olimpo.</p>
+                <div id="result-summary"></div>
+                <button id="restart-btn">NOVO DUELO</button>
+            </div>
+        </div>
+
+        <!-- SONS E FEEDBACK (Opcional, mas para o premium sinto que ajuda) -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
