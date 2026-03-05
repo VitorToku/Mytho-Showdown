@@ -53,8 +53,91 @@ let gameState = {
     activeModifiers: [],
     turnHistory: [],
     turnMultipliers: [1, 1.5, 2],
-    isRevealing: false
+    isRevealing: false,
+    hasSwappedThisTurn: false
 };
+
+// --- TUTORIAL LOGIC ---
+
+const TUTORIAL_STEPS = [
+    {
+        title: "Bem-vindo ao Olimpo!",
+        text: "Mytho Showdown é um duelo estratégico de 3 turnos. Seu objetivo é acumular mais poder que o oponente através de cartas e modificadores.",
+        image: "🏛️"
+    },
+    {
+        title: "Cartas e Atributos",
+        text: "Cada carta tem um valor de Ataque base e um Elemento (Fogo, Água, Terra, Ar). Os elementos são a chave para ativar bônus poderosos.",
+        image: "🃏"
+    },
+    {
+        title: "Modificadores Ativos",
+        text: "A cada turno, um novo Modificador é adicionado. Eles podem dar bônus a elementos específicos ou combos de cartas que você jogou nos turnos anteriores.",
+        image: "✨"
+    },
+    {
+        title: "Turnos e Multiplicadores",
+        text: "O jogo tem 3 turnos com multiplicadores crescentes: x1, x1.5 e x2. Planeje bem suas melhores cartas para os turnos finais!",
+        image: "⏳"
+    }
+];
+
+let tutorialCurrentStep = 0;
+
+function showTutorial() {
+    console.log("Showing tutorial...");
+    tutorialCurrentStep = 0;
+    document.getElementById("tutorial-overlay").classList.remove("hidden");
+    updateTutorialStep();
+}
+
+function updateTutorialStep() {
+    const step = TUTORIAL_STEPS[tutorialCurrentStep];
+    const container = document.getElementById("tutorial-steps");
+    container.innerHTML = `
+        <div class="tutorial-step-content">
+            <div class="tutorial-image">${step.image}</div>
+            <h2>${step.title}</h2>
+            <p>${step.text}</p>
+        </div>
+    `;
+
+    document.getElementById("step-indicator").innerText = `Passo ${tutorialCurrentStep + 1}/${TUTORIAL_STEPS.length}`;
+
+    // Control buttons
+    const prevBtn = document.getElementById("tutorial-prev");
+    const nextBtn = document.getElementById("tutorial-next");
+    const closeBtn = document.getElementById("tutorial-close");
+
+    prevBtn.disabled = tutorialCurrentStep === 0;
+
+    if (tutorialCurrentStep === TUTORIAL_STEPS.length - 1) {
+        nextBtn.classList.add("hidden");
+        closeBtn.classList.remove("hidden");
+    } else {
+        nextBtn.classList.remove("hidden");
+        closeBtn.classList.add("hidden");
+    }
+}
+
+function nextTutorialStep() {
+    if (tutorialCurrentStep < TUTORIAL_STEPS.length - 1) {
+        tutorialCurrentStep++;
+        updateTutorialStep();
+    }
+}
+
+function prevTutorialStep() {
+    if (tutorialCurrentStep > 0) {
+        tutorialCurrentStep--;
+        updateTutorialStep();
+    }
+}
+
+function closeTutorial() {
+    document.getElementById("tutorial-overlay").classList.add("hidden");
+    localStorage.setItem("mytho_showdown_tutorial_finished", "true");
+}
 
 // --- CORE LOGIC ---
 
@@ -70,7 +153,8 @@ function initGame() {
         activeModifiers: [],
         turnHistory: [],
         turnMultipliers: [1, 1.5, 2],
-        isRevealing: false
+        isRevealing: false,
+        hasSwappedThisTurn: false
     };
 
     // Clear zones on restart
@@ -195,6 +279,19 @@ function getElementEmoji(element) {
     }
 }
 
+function swapCard(index) {
+    console.log("Swapping card at index:", index);
+    if (gameState.hasSwappedThisTurn || gameState.isRevealing) {
+        console.warn("Swap rejected. HasSwapped:", gameState.hasSwappedThisTurn, "isRevealing:", gameState.isRevealing);
+        return;
+    }
+
+    const newCard = getRandomCards(1)[0];
+    gameState.playerHand[index] = newCard;
+    gameState.hasSwappedThisTurn = true;
+    updateUI();
+}
+
 function createCardElement(card, index) {
     const div = document.createElement("div");
     div.className = `card ${card.element}`;
@@ -219,11 +316,18 @@ function createCardElement(card, index) {
                 <span class="card-attack-value">${displayAttack}</span>
             </div>
         </div>
+        ${index !== -1 && !gameState.hasSwappedThisTurn ? `<button class="swap-btn" title="Trocar Carta">🔄</button>` : ''}
     `;
 
     // Only add click handler for cards in hand
     if (index !== -1) {
-        div.onclick = () => playTurn(index);
+        div.onclick = (e) => {
+            if (e.target.classList.contains('swap-btn')) {
+                swapCard(index);
+            } else {
+                playTurn(index);
+            }
+        };
     }
 
     return div;
@@ -232,7 +336,11 @@ function createCardElement(card, index) {
 // --- GAME ACTIONS ---
 
 function playTurn(cardIndex) {
-    if (gameState.isRevealing) return;
+    console.log("Playing turn with card index:", cardIndex);
+    if (gameState.isRevealing) {
+        console.warn("Turn rejected: isRevealing is true");
+        return;
+    }
 
     gameState.isRevealing = true;
     const playerCard = gameState.playerHand[cardIndex];
@@ -354,13 +462,33 @@ function finishTurn(pAtk, oAtk) {
 }
 
 function nextTurn() {
+    console.log("Next turn starting. Current:", gameState.currentTurn);
     if (gameState.currentTurn < 3) {
         gameState.currentTurn++;
         addModifier();
         gameState.isRevealing = false;
-        document.getElementById("game-message").innerText = "Escolha sua carta!";
+        gameState.hasSwappedThisTurn = false;
+
+        // Draw 1 card for each player
+        const newPlayerCard = getRandomCards(1)[0];
+        const newOppCard = getRandomCards(1)[0];
+
+        // Find empty slots OR push
+        const pNullIdx = gameState.playerHand.indexOf(null);
+        if (pNullIdx !== -1) gameState.playerHand[pNullIdx] = newPlayerCard;
+        else gameState.playerHand.push(newPlayerCard);
+
+        const oNullIdx = gameState.opponentHand.indexOf(null);
+        if (oNullIdx !== -1) gameState.opponentHand[oNullIdx] = newOppCard;
+        else gameState.opponentHand.push(newOppCard);
+
+        document.getElementById("game-message").innerText = "Novas cartas compradas!";
+
         // We DO NOT clear the zones here as per user request to keep creatures on field
-        updateUI();
+        setTimeout(() => {
+            document.getElementById("game-message").innerText = "Escolha sua carta!";
+            updateUI();
+        }, 1000);
     } else {
         endGame();
     }
@@ -392,7 +520,36 @@ function endGame() {
     }
 }
 
-document.getElementById("restart-btn").onclick = initGame;
+// Event Listeners
+function setupListeners() {
+    const attach = (id, fn) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', fn);
+        } else {
+            console.error("Element not found: " + id);
+        }
+    };
+
+    attach("restart-btn", initGame);
+    attach("tutorial-btn", showTutorial);
+    attach("tutorial-next", nextTutorialStep);
+    attach("tutorial-prev", prevTutorialStep);
+    attach("tutorial-close", closeTutorial);
+}
 
 // Start!
-initGame();
+document.addEventListener('DOMContentLoaded', () => {
+    // console.log to avoid alert spam in subagent, but let's be and use alert once
+    // alert("DOM Loaded - Mytho Showdown"); 
+    console.log("DOM Loaded - Script starting...");
+    setupListeners();
+    const isFinished = localStorage.getItem("mytho_showdown_tutorial_finished");
+    console.log("Tutorial finished flag:", isFinished);
+
+    // For debugging: Force tutorial on first click even if finished? No, user button handles that.
+    if (!isFinished) {
+        showTutorial();
+    }
+    initGame();
+});

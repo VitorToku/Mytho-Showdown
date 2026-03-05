@@ -29,6 +29,7 @@
         <div class="header-info">
             <h1>MYTHO SHOWDOWN</h1>
             <div id="turn-display">Turno: <span id="current-turn">1</span>/3</div>
+            <button id="tutorial-btn" class="secondary-btn">COMO JOGAR</button>
         </div>
 
         <div id="turn-history">
@@ -82,10 +83,25 @@
             </div>
         </div>
 
+        <!-- TUTORIAL OVERLAY -->
+        <div id="tutorial-overlay" class="hidden">
+            <div class="tutorial-content">
+                <div id="tutorial-steps">
+                    <!-- Steps will be injected via JS -->
+                </div>
+                <div class="tutorial-controls">
+                    <button id="tutorial-prev" class="nav-btn">Anterior</button>
+                    <div id="step-indicator">Step 1/4</div>
+                    <button id="tutorial-next" class="nav-btn">Próximo</button>
+                    <button id="tutorial-close" class="nav-btn hidden">Começar!</button>
+                </div>
+            </div>
+        </div>
+
         <!-- SONS E FEEDBACK (Opcional, mas para o premium sinto que ajuda) -->
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
 </body>
 
 </html>
